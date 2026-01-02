@@ -1,0 +1,7 @@
+train: database/images/train
+val: database/images/val
+
+names:
+  0: table
+  1: cell
+  2: text
