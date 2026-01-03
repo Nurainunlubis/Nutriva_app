@@ -1,4 +1,3 @@
-// App.js
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import "./App.css";
 
@@ -281,6 +280,7 @@ export default function App() {
       <MetricCard label="Lemak Jenuh" value={result?.nutrition?.lemak_jenuh_g} unit="gram" />
       <MetricCard label="Protein" value={result?.nutrition?.protein_g} unit="gram" />
       <MetricCard label="Karbohidrat" value={result?.nutrition?.karbohidrat_g} unit="gram" />
+      <MetricCard label="Gula" value={result?.nutrition?.gula_total_g} unit="gram" />
       <MetricCard label="Garam" value={result?.nutrition?.garam_mg} unit="miligram" />
     </div>
   </div>
@@ -293,15 +293,6 @@ export default function App() {
         {/* Kiri: teks */}
         <div className="ref-left">
           <h2 className="ref-title">Referensi</h2>
-
-          {/* <p className="ref-text">
-            <b>Takaran saji.</b> Satu sendok makan gula setara dengan 12,5 gram, satu
-            sendok teh garam setara dengan 2000 mg, dan satu sendok makan lemak
-            setara dengan 13,4 gram. Takaran ini digunakan untuk memudahkan
-            pemahaman jumlah kandungan dalam makanan berdasarkan ukuran rumah tangga
-            sehari-hari.
-          </p> */}
-
           <p className="ref-text">
             <b>Kalori dan Protein dalam makanan/minuman.</b> Referensi nilai kalori
             dan protein pada makanan/minuman diambil dari daftar konversi zat gizi

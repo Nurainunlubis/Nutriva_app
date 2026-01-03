@@ -469,7 +469,7 @@ body{ margin:0; font-family: Inter, system-ui, Arial, sans-serif; color:var(--te
 
 .viz-grid{
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)); /* 3 kolom */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
 }
 

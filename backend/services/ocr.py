@@ -2,20 +2,12 @@ import cv2
 import numpy as np
 import pytesseract
 import re
-from typing import List
+from typing import List, Dict, Optional, Tuple
 
-# Kalau di Windows dan tesseract belum masuk PATH, isi ini:
-# pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-
+# -----------------------------
+# OCR PREPROCESS (boleh tetap)
+# -----------------------------
 def preprocess_for_ocr(image_bgr: np.ndarray) -> np.ndarray:
-    """
-    Preprocess yang cocok buat label gizi:
-    - grayscale
-    - upscale (biar font kecil kebaca)
-    - CLAHE (naikin kontras)
-    - adaptive threshold
-    - morphology close (rapihin huruf)
-    """
     gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
 
     h, w = gray.shape[:2]
@@ -38,26 +30,53 @@ def preprocess_for_ocr(image_bgr: np.ndarray) -> np.ndarray:
     thr = cv2.morphologyEx(thr, cv2.MORPH_CLOSE, k, iterations=1)
     return thr
 
+
+# ---------------------------------------------------------
+# OCR: JANGAN BUANG TOKEN ANGKA MESKI CONF KECIL
+# ---------------------------------------------------------
 def run_ocr_from_array(image_bgr: np.ndarray) -> List[str]:
     proc = preprocess_for_ocr(image_bgr)
 
     config = r"--oem 3 --psm 6"
-    data = pytesseract.image_to_data(proc, lang="eng", config=config, output_type=pytesseract.Output.DICT)
+    data = pytesseract.image_to_data(
+        proc, lang="eng", config=config, output_type=pytesseract.Output.DICT
+    )
 
-    words = []
+    lines_map = {}  # key: (block, par, line) -> list of (left, text)
     n = len(data["text"])
+
     for i in range(n):
         txt = (data["text"][i] or "").strip()
-        conf = float(data["conf"][i]) if str(data["conf"][i]).isdigit() else -1
-
-        # buang noise
-        if conf < 35:
-            continue
-        if len(txt) < 2:
+        if not txt:
             continue
 
-        txt = re.sub(r"\s+", " ", txt)
-        words.append(txt)
+        conf_raw = data["conf"][i]
+        try:
+            conf = float(conf_raw)
+        except:
+            conf = -1
 
-    # gabung jadi 1 baris besar (lebih gampang diekstrak)
-    return [" ".join(words)]
+        # KEEP token kalau:
+        # - confidence cukup (>=20), ATAU
+        # - token ada digit (biasanya angka gizi conf kecil)
+        has_digit = any(ch.isdigit() for ch in txt)
+        if conf < 20 and not has_digit:
+            continue
+
+        b = data.get("block_num", [0]*n)[i]
+        p = data.get("par_num", [0]*n)[i]
+        l = data.get("line_num", [0]*n)[i]
+        left = data.get("left", [0]*n)[i]
+
+        key = (b, p, l)
+        lines_map.setdefault(key, []).append((left, txt))
+
+    lines = []
+    for key in sorted(lines_map.keys()):
+        parts = [t for _, t in sorted(lines_map[key], key=lambda x: x[0])]
+        line = " ".join(parts)
+        line = re.sub(r"\s+", " ", line).strip()
+        if line:
+            lines.append(line)
+
+    return lines
