@@ -9,11 +9,15 @@ from services.ocr import run_ocr_from_array
 from services.extract import extract_nutrition
 from services.yolo import YoloService
 
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
 app = FastAPI(title="API Deteksi Tabel Gizi", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000",
+                   "https://*.vercel.app"],
+                    
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
